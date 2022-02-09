@@ -4,8 +4,7 @@
 
 Aim of this benchmark : If a cluster roll happens during a transaction, and if the broker down is the transaction coordinator of this transaction, what happens ? 
 
-After a lot of tests, often the librdkafka-based's client doen't complete the AbortTransaction operation. Client will be dispose 10 minutes after trying to abort the transaction. 
-There is a bug in librdkafka-based's client ? or broker side ?
+After a lot of tests, often the librdkafka-based client doesn't complete the AbortTransaction operation. Client will be dispose 10 minutes after trying to abort the transaction. 
 
 # How to test ?
 
