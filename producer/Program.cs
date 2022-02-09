@@ -35,7 +35,8 @@ namespace producer
             producerConfig.TransactionalId = transactionId;
             producerConfig.EnableIdempotence = true;
             producerConfig.MaxInFlight = 5;
-            producerConfig.Debug = "broker,topic,msg,eos,protocol";
+            //producerConfig.Debug = "broker,topic,msg,eos,protocol";
+            producerConfig.Debug = "all";
 
             Random rd = new Random();
             ProducerBuilder<string, string> producerBuilder = new ProducerBuilder<string, string>(producerConfig);
