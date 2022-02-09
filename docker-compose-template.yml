@@ -1,0 +1,123 @@
+version: "2.4"
+services:
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:7.0.0
+    hostname: zookeeper-1
+    ports:
+      - 12181:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: "1"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:7.0.0
+    hostname: zookeeper-2
+    ports:
+      - 12182:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: "2"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:7.0.0
+    hostname: zookeeper-3
+    ports:
+      - 12183:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: "3"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=*"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka-1
+    ports:
+      - 19092:19092
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_LISTENERS: "INTERNAL://kafka-1:9092,EXTERNAL://:19092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-1:9092,EXTERNAL://localhost:19092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      # KAFKA_CONNECTIONS_MAX_IDLE_MS: 120000 # 2min
+      KAFKA_BROKER_ID: "1"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka-2
+    ports:
+      - 19093:19093
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_LISTENERS: "INTERNAL://kafka-2:9092,EXTERNAL://:19093"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-2:9092,EXTERNAL://localhost:19093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # KAFKA_CONNECTIONS_MAX_IDLE_MS: 120000 # 2min
+      KAFKA_BROKER_ID: "2"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.0.0
+    hostname: kafka-3
+    ports:
+      - 19094:19094
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"
+      KAFKA_LISTENERS: "INTERNAL://kafka-3:9092,EXTERNAL://:19094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka-3:9092,EXTERNAL://localhost:19094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      # KAFKA_CONNECTIONS_MAX_IDLE_MS: 120000 # 2min
+      KAFKA_BROKER_ID: "3"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+  
+  producer:
+    build: ./producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+      KAFKA_TOPIC: TOPIC_TRANSACTION_TO_REPLACE
+      KAFKA_TRANSACTION_ID: TRANSACTION_ID_TO_REPLACE
+      KAFKA_WAIT_BEFORE_COMMIT_TRANSACTION: 25
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+  consumer:
+    build: ./consumer
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+      KAFKA_TOPIC: TOPIC_TRANSACTION_TO_REPLACE
+      KAFKA_GROUP_ID: consumer-transaction-group
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
