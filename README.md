@@ -36,3 +36,7 @@ You can inspect an example log of the problem [here](./issue.log).
 ``` bash
 ./stop.sh
 ```
+
+# How to fix ? 
+
+Please `confluent-kafka-dotnet` >= 1.9.0 to fix this [issue](https://github.com/edenhill/librdkafka/issues/3779).
